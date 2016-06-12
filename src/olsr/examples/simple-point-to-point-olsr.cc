@@ -48,6 +48,7 @@
 #include "ns3/olsr-helper.h"
 #include "ns3/ipv4-static-routing-helper.h"
 #include "ns3/ipv4-list-routing-helper.h"
+#include "path_finder.h"
 
 using namespace ns3;
 

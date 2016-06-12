@@ -121,6 +121,11 @@ public:
   /// Inject Associations from an Ipv4StaticRouting instance
   void SetRoutingTableAssociation (Ptr<Ipv4StaticRouting> routingTable);
 
+  OlsrState& GetState()
+  {
+	  return m_state;
+  }
+
 protected:
   virtual void DoStart (void);
 private:
@@ -164,8 +169,10 @@ private:
                  const Ipv4Address &next,
                  const Ipv4Address &interfaceAddress,
                  uint32_t distance);
+public:
   bool Lookup (const Ipv4Address &dest,
-               RoutingTableEntry &outEntry) const;
+          RoutingTableEntry &outEntry) const;
+private:
   bool FindSendEntry (const RoutingTableEntry &entry,
                       RoutingTableEntry &outEntry) const;
 

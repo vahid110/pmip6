@@ -208,7 +208,8 @@ int main (int argc, char *argv[])
    app1->SetStopTime (Seconds (100.));
 
    // UDP connection from N10 to N14
-
+   	   int ii = 1;
+   	   (void) ii;
     Address sinkAddress2 (InetSocketAddress (ifcont.GetAddress (14), sinkPort)); // interface of n14
     PacketSinkHelper packetSinkHelper2 ("ns3::UdpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), sinkPort));
     ApplicationContainer sinkApps2 = packetSinkHelper2.Install (c.Get (14)); //n14 as sink

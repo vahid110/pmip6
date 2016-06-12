@@ -1,5 +1,8 @@
+#pragma once
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
+
+#include "path_finder.h"
 
 using namespace ns3;
 
@@ -86,6 +89,16 @@ MyApp::StopApplication (void)
 void
 MyApp::SendPacket (void)
 {
+	//std::cout << "HI\n";
+	Ptr<Node> src_node = m_socket->GetNode();
+
+	const Ipv4Address dest_address = InetSocketAddress::ConvertFrom(m_peer).GetIpv4();
+
+	NS_LOG_UNCOND("SendPacket[" << OlsrPathFinder::GetIpv4Address(src_node) << " --> " << dest_address << "]");
+
+	OlsrPathFinder::PrintPath(src_node, dest_address)	;
+
+
   Ptr<Packet> packet = Create<Packet> (m_packetSize);
   m_socket->Send (packet);
 
