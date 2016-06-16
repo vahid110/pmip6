@@ -89,14 +89,14 @@ MyApp::StopApplication (void)
 void
 MyApp::SendPacket (void)
 {
-	//std::cout << "HI\n";
 	Ptr<Node> src_node = m_socket->GetNode();
 
 	const Ipv4Address dest_address = InetSocketAddress::ConvertFrom(m_peer).GetIpv4();
 
-	NS_LOG_UNCOND("SendPacket[" << OlsrPathFinder::GetIpv4Address(src_node) << " --> " << dest_address << "]");
+	NS_LOG_DEBUG("SendPacket[" << OlsrPathFinder::GetIpv4Address(src_node) <<
+			" --> " << dest_address << "]");
 
-	OlsrPathFinder::PrintPath(src_node, dest_address)	;
+	//OlsrPathFinder::PrintPath(src_node, dest_address)	;
 
 
   Ptr<Packet> packet = Create<Packet> (m_packetSize);
