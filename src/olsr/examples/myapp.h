@@ -1,8 +1,7 @@
-#pragma once
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
 
-#include "path_finder.h"
+#include "ipv6_static_router.h"
 
 using namespace ns3;
 
@@ -31,6 +30,7 @@ private:
   EventId         m_sendEvent;
   bool            m_running;
   uint32_t        m_packetsSent;
+  Ipv6StaticRouter m_ipv6_router;
 };
 
 MyApp::MyApp ()
@@ -89,15 +89,16 @@ MyApp::StopApplication (void)
 void
 MyApp::SendPacket (void)
 {
-	Ptr<Node> src_node = m_socket->GetNode();
-
-	const Ipv4Address dest_address = InetSocketAddress::ConvertFrom(m_peer).GetIpv4();
-
-	NS_LOG_DEBUG("SendPacket[" << OlsrPathFinder::GetIpv4Address(src_node) <<
-			" --> " << dest_address << "]");
+//	Ptr<Node> src_node = m_socket->GetNode();
+//
+//	const Ipv4Address dest_address = InetSocketAddress::ConvertFrom(m_peer).GetIpv4();
+//
+//	NS_LOG_DEBUG("SendPacket[" << OlsrPathFinder::GetIpv4Address(src_node) <<
+//			" --> " << dest_address << "]");
 
 	//OlsrPathFinder::PrintPath(src_node, dest_address)	;
 
+	SetRoutes(m_socket, m_peer);
 
   Ptr<Packet> packet = Create<Packet> (m_packetSize);
   m_socket->Send (packet);

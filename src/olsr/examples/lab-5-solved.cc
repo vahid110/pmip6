@@ -70,7 +70,6 @@
 #include "ns3/internet-module.h"
 #include "ns3/olsr-helper.h"
 #include "ns3/flow-monitor-module.h"
-#include "myapp.h"
 
 #include <iostream>
 #include <fstream>
@@ -78,6 +77,7 @@
 #include <string>
 
 NS_LOG_COMPONENT_DEFINE ("Lab5");
+#include "myapp.h"
 
 using namespace ns3;
 
