@@ -9,10 +9,12 @@ def build(bld):
                                  ['core', 'mobility', 'wifi', 'csma', 'olsr'])
     obj.source = 'olsr-hna.cc'
 
-    obj = bld.create_ns3_program('lab5',
-                                 ['core', 'mobility', 'wifi', 'csma', 'olsr', 'flow-monitor'])
-    obj.source = 'lab-5-solved.cc'
+    #obj = bld.create_ns3_program('lab5',
+    #                             ['core', 'mobility', 'wifi', 'csma', 'olsr', 'flow-monitor'])
+    #obj.source = 'lab-5-solved.cc'
 
-    obj = bld.create_ns3_program('lab5ipv6',
-                                 ['core', 'mobility', 'wifi', 'csma', 'olsr', 'flow-monitor'])
-    obj.source = 'lab-5-ipv6.cc'
+    #obj = bld.create_ns3_program('lab5ipv6',
+    #                             ['core', 'mobility', 'wifi', 'csma', 'olsr', 'flow-monitor'])
+    #obj.source = 'lab-5-ipv6.cc'
+    
+    bld.add_subdirs('move_together')
