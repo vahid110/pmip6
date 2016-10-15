@@ -13,6 +13,8 @@
 #include "ns3/internet-module.h"
 #include "ns3/olsr-helper.h"
 #include "ns3/flow-monitor-module.h"
+#include "ns3/pmip6-module.h"
+#include "ns3/csma-module.h"
 
 #include <iostream>
 #include <fstream>
@@ -43,15 +45,36 @@ static struct DefaultValues
 	  std::string rtslimit;
 } defaultValues;
 
-static struct Nodes
+class MyNode :public Node
 {
-	NodeContainer all;
-	NodeContainer& CreateAll(uint32_t numNodes = defaultValues.numNodes)
+
+};
+
+template<typename T=MyNode>
+class MyNodeContainer : public NodeContainer
+{
+public:
+	void Create (uint32_t n)
+	{
+	  for (uint32_t i = 0; i < n; i++)
+		{
+		    Add (CreateObject<T> ());
+		}
+	}
+};
+
+template<typename T=MyNodeContainer<> >
+struct Nodes
+{
+	T all;
+	T& CreateAll(uint32_t numNodes = defaultValues.numNodes)
 	{
 		all.Create(numNodes);
 		return all;
 	}
-} nodeContainers;
+};
+
+static Nodes<> nodeContainers;
 
 void DoDefaultConfig()
 {
@@ -60,6 +83,75 @@ void DoDefaultConfig()
 	  // Fix non-unicast data rate to be the same as that of unicast
 	  Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode", StringValue (defaultValues.phyMode));
 }
+
+
+
+Ipv6InterfaceContainer AssignIpv6Address(Ptr<NetDevice> device, Ipv6Address addr, Ipv6Prefix prefix)
+{
+  Ipv6InterfaceContainer retval;
+
+  Ptr<Node> node = device->GetNode ();
+  NS_ASSERT_MSG (node, "Ipv6AddressHelper::Allocate (): Bad node");
+
+  Ptr<Ipv6> ipv6 = node->GetObject<Ipv6> ();
+  NS_ASSERT_MSG (ipv6, "Ipv6AddressHelper::Allocate (): Bad ipv6");
+  int32_t ifIndex = 0;
+
+  ifIndex = ipv6->GetInterfaceForDevice (device);
+  if (ifIndex == -1)
+    {
+      ifIndex = ipv6->AddInterface (device);
+    }
+  NS_ASSERT_MSG (ifIndex >= 0, "Ipv6AddressHelper::Allocate (): "
+                 "Interface index not found");
+
+  Ipv6InterfaceAddress ipv6Addr = Ipv6InterfaceAddress (addr, prefix);
+  ipv6->SetMetric (ifIndex, 1);
+  ipv6->SetUp (ifIndex);
+  ipv6->AddAddress (ifIndex, ipv6Addr);
+
+  retval.Add (ipv6, ifIndex);
+
+  return retval;
+}
+
+Ipv6InterfaceContainer AssignWithoutAddress(Ptr<NetDevice> device)
+{
+  Ipv6InterfaceContainer retval;
+
+  Ptr<Node> node = device->GetNode ();
+  NS_ASSERT_MSG (node, "Ipv6AddressHelper::Allocate (): Bad node");
+
+  Ptr<Ipv6> ipv6 = node->GetObject<Ipv6> ();
+  NS_ASSERT_MSG (ipv6, "Ipv6AddressHelper::Allocate (): Bad ipv6");
+  int32_t ifIndex = 0;
+
+  ifIndex = ipv6->GetInterfaceForDevice (device);
+  if (ifIndex == -1)
+    {
+      ifIndex = ipv6->AddInterface (device);
+    }
+  NS_ASSERT_MSG (ifIndex >= 0, "Ipv6AddressHelper::Allocate (): "
+                 "Interface index not found");
+
+  ipv6->SetMetric (ifIndex, 1);
+  ipv6->SetUp (ifIndex);
+
+  retval.Add (ipv6, ifIndex);
+
+  return retval;
+}
+
+NetDeviceContainer SetCsma(NodeContainer &nodes = nodeContainers.all)
+{
+	CsmaHelper csma;
+	//All Link is 50Mbps and 0.1ms delay
+	csma.SetChannelAttribute ("DataRate", DataRateValue (DataRate(50000000)));
+	csma.SetChannelAttribute ("Delay", TimeValue (MicroSeconds(100)));
+	csma.SetDeviceAttribute ("Mtu", UintegerValue (1400));
+	return csma.Install(nodes);
+}
+
 
 NetDeviceContainer SetWifi(NodeContainer &nodes = nodeContainers.all)
 {
@@ -120,6 +212,51 @@ void SetMobility(NodeContainer &nodes = nodeContainers.all)
 		  mobility.Install (nodes.Get(i));
 	  }
 }
+
+Pmip6ProfileHelper *
+CreateProfiler(
+		const MyNodeContainer<> &nc,
+		const Node &lma)
+{
+	Pmip6ProfileHelper *profile = new Pmip6ProfileHelper();
+	for( MyNodeContainer<>::Iterator it = nc.Begin(); it != nc.End(); it++)
+	{
+		Ptr<Node> node = *it;
+		Ptr<NetDevice> device = node->GetDevice(0);
+		Ptr<Ipv6> ipv6 = node->GetObject<Ipv6> ();
+		int32_t ifIndex = ipv6->GetInterfaceForDevice (device);
+		char str[16];
+		memset(str,0,16);
+		snprintf(str, sizeof str, "node-%lu", (unsigned long)node->GetId());
+
+		profile->AddProfile(
+				str,
+				Identifier(Mac48Address::ConvertFrom(device->GetAddress())),
+				lma.GetDevice()->GetAddress(0, 1),
+				std::list<Ipv6Address>());
+	}
+
+	return profile;
+}
+
+void SetLma(Node &lma, Pmip6ProfileHelper *profile)
+{
+	  Pmip6LmaHelper lmahelper;
+	  lmahelper.SetPrefixPoolBase(Ipv6Address("3ffe:1:4::"), 48);
+	  lmahelper.SetProfileHelper(profile);
+
+	  lmahelper.Install(lma);
+}
+
+void SetMag(NodeContainer &mags,NodeContainer &aps, Pmip6ProfileHelper *profile)
+{
+	  Pmip6MagHelper maghelper;
+	  maghelper.SetProfileHelper(profile);
+	  maghelper.Install (mags.Get(0), mag1Ifs.GetAddress(0, 0), aps.Get(0));
+	  maghelper.Install (mags.Get(1), mag2Ifs.GetAddress(0, 0), aps.Get(1));
+}
+
+
 
 int main (int argc, char *argv[])
 {
